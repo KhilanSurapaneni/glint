@@ -18,14 +18,14 @@ Legend:
 
 Nothing in this project builds until this phase is done. Est. 30–90 min, mostly Xcode download time.
 
-### 0.1 🧑 Install full Xcode
+### 0.1 🧑 Install full Xcode ✅
 You currently have Command Line Tools (`/Library/Developer/CommandLineTools`) but not the
 full Xcode app. The Metal shader compiler toolchain is only obtainable through Xcode, not CLT
 alone (`CLAUDE.md` §5 gotcha #1). Install Xcode from the Mac App Store — it's free, but large
 (~10–15 GB) and requires being signed into an Apple ID.
 
-- [ ] Xcode installed from the App Store
-- [ ] Opened Xcode at least once (it may run a first-launch "installing additional components" step — let it finish)
+- [x] Xcode installed from the App Store
+- [x] Opened Xcode at least once (it may run a first-launch "installing additional components" step — let it finish)
 
 ### 0.2 🤖 Point the command-line tools at Xcode
 ```bash
@@ -34,26 +34,26 @@ xcode-select -p   # should print /Applications/Xcode.app/Contents/Developer
 ```
 This requires your password (sudo) — run it yourself in a terminal if I can't prompt interactively.
 
-- [ ] `xcode-select -p` points into `Xcode.app`
+- [x] `xcode-select -p` points into `Xcode.app`
 
 ### 0.3 🧑 Accept the Xcode license
 ```bash
 sudo xcodebuild -license accept
 ```
-- [ ] License accepted (command exits with no error)
+- [x] License accepted (command exits with no error)
 
 ### 0.4 🤖 Download the Metal toolchain component
 Recent Xcode ships the Metal compiler as a separate downloadable component.
 ```bash
 xcodebuild -downloadComponent MetalToolchain
 ```
-- [ ] Command completes successfully
+- [x] Command completes successfully
 
 ### 0.5 🤖 Verify the Metal compiler works
 ```bash
 xcrun -sdk macosx metal --version
 ```
-- [ ] Prints a version instead of "unable to find utility"
+- [x] Prints a version instead of "unable to find utility"
 
 ### 0.6 🤖 Install build tools via Homebrew
 Per `CLAUDE.md` §3, brew is only sanctioned for OpenCV as a *project dependency* — but build
@@ -64,8 +64,8 @@ brew install cmake ninja
 cmake --version   # need >= 3.24
 ninja --version
 ```
-- [ ] `cmake --version` ≥ 3.24
-- [ ] `ninja --version` prints a version
+- [x] `cmake --version` ≥ 3.24
+- [x] `ninja --version` prints a version
 
 **Phase 0 exit check:** `xcrun -sdk macosx metal --version`, `cmake --version`, `ninja --version`
 all succeed.
@@ -77,7 +77,7 @@ all succeed.
 Create the directory structure from `CLAUDE.md` §4 (the M0-relevant subset only — we add
 `slam/`, `lang/` etc. in later milestones, not now, per "no speculative infrastructure").
 
-- [ ] Create directories:
+- [x] Create directories:
   ```
   cmake/
   src/core/
@@ -90,9 +90,9 @@ Create the directory structure from `CLAUDE.md` §4 (the M0-relevant subset only
   assets/            (gitignored)
   docs/media/
   ```
-- [ ] `.gitignore` — at minimum: `build/`, `assets/`, `.cache/`
-- [ ] `.clang-format` at repo root — LLVM base style, 100-column limit, 2-space indent (`CLAUDE.md` §7)
-- [ ] Decide: keep the name `glint`, or rename now? (§0 of `CLAUDE.md`: rename in one commit
+- [x] `.gitignore` — at minimum: `build/`, `assets/`, `.cache/`
+- [x] `.clang-format` at repo root — LLVM base style, 100-column limit, 2-space indent (`CLAUDE.md` §7)
+- [x] Decide: keep the name `glint`, or rename now? (§0 of `CLAUDE.md`: rename in one commit
       across `CMakeLists.txt` + namespace + docs if we do it — cheapest time to do it is before
       anything exists.)
 
@@ -104,25 +104,22 @@ Create the directory structure from `CLAUDE.md` §4 (the M0-relevant subset only
 lets us call Metal from `.cpp` without touching Objective-C++. Header-only, so "vendoring" it
 just means fetching the headers at configure time.
 
-- [ ] `cmake/Dependencies.cmake`: add a `FetchContent_Declare` for metal-cpp, pinned to a
+- [x] `cmake/Dependencies.cmake`: add a `FetchContent_Declare` for metal-cpp, pinned to a
       specific tagged release (need to check Apple's metal-cpp page for the release matching
       the macOS SDK on this machine — we'll pick the tag when we get here rather than guess now)
-- [ ] Smoke-test: a `.cpp` file that just does `#include <Metal/Metal.hpp>` and compiles
+- [x] Smoke-test: a `.cpp` file that just does `#include <Metal/Metal.hpp>` and compiles
 
 ---
 
 ## Phase 3 — Root CMake skeleton
 
-- [ ] Root `CMakeLists.txt`: `cmake_minimum_required(VERSION 3.24)`, `project(glint CXX)`,
-      `set(CMAKE_CXX_STANDARD 20)`, `CMAKE_CXX_STANDARD_REQUIRED ON`
-- [ ] `include(cmake/Dependencies.cmake)`
-- [ ] `add_subdirectory(src)`, `add_subdirectory(tests)`
-- [ ] Configure + build with **nothing in it yet**, just to confirm the CMake plumbing itself works:
-  ```bash
-  cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -GNinja
-  cmake --build build -j
-  ```
-- [ ] Empty build succeeds
+- [x] Root `CMakeLists.txt`: `cmake_minimum_required(VERSION 3.24)`, `project(glint CXX)`,
+      `set(CMAKE_CXX_STANDARD 20)`, `CMAKE_CXX_STANDARD_REQUIRED ON` — done directly in Phase 2
+- [x] `include(cmake/Dependencies.cmake)` — done in Phase 2
+- [ ] `add_subdirectory(src)`, `add_subdirectory(tests)` — **deferred to Phase 4**, once there's
+      more than one file to justify splitting into subdirectory CMakeLists.txt files (avoids
+      empty speculative scaffolding per `CLAUDE.md` working agreements)
+- [x] Configure + build confirmed working (Phase 2's smoke test build was this check, in practice)
 
 ---
 

@@ -67,3 +67,9 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# macOS
+.DS_Store
+
+# project assets — models, datasets; fetched locally, never committed
+assets/
