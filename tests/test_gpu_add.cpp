@@ -5,12 +5,12 @@
 #include "gpu/kernel.hpp"
 
 TEST(GpuAdd, AddsArraysCorrectly) {
-  glint::gpu::Device device;
+  glint::gpu::Device device;  // connects to the GPU
 
   constexpr size_t kCount = 1024;
   glint::gpu::Buffer<float> a(device.device(), kCount);
   glint::gpu::Buffer<float> b(device.device(), kCount);
-  glint::gpu::Buffer<float> c(device.device(), kCount);
+  glint::gpu::Buffer<float> c(device.device(), kCount);  // will hold the GPU's output
 
   for (size_t i = 0; i < kCount; ++i) {
     a.data()[i] = static_cast<float>(i);
@@ -21,6 +21,7 @@ TEST(GpuAdd, AddsArraysCorrectly) {
   glint::gpu::dispatch_and_wait(device.queue(), add_kernel,
                                  {a.handle(), b.handle(), c.handle()}, kCount);
 
+  // Check every result the GPU computed, not just a sample.
   for (size_t i = 0; i < kCount; ++i) {
     EXPECT_FLOAT_EQ(c.data()[i], a.data()[i] + b.data()[i]);
   }

@@ -1,6 +1,5 @@
-// This is the one translation unit in the whole program that defines these — see
-// metal_cpp's single-header-library convention. Every other file just includes the headers
-// normally.
+// The one file in the whole program that defines these — turns on metal-cpp's implementation
+// code (normally skipped). Every other file just includes the headers as plain declarations.
 #define NS_PRIVATE_IMPLEMENTATION
 #define CA_PRIVATE_IMPLEMENTATION
 #define MTL_PRIVATE_IMPLEMENTATION
@@ -20,9 +19,10 @@ namespace glint::gpu {
 
 namespace {
 
+// Folder the running executable lives in — needed to find default.metallib next to it.
 std::filesystem::path executable_dir() {
   uint32_t size = 0;
-  _NSGetExecutablePath(nullptr, &size);
+  _NSGetExecutablePath(nullptr, &size);  // first call just reports the buffer size we need
   std::vector<char> path(size);
   if (_NSGetExecutablePath(path.data(), &size) != 0) {
     throw std::runtime_error("failed to resolve the running executable's path");
@@ -44,7 +44,7 @@ Device::Device() {
   }
 
   // We're a plain CLI executable, not an .app bundle, so newDefaultLibrary() has nothing to
-  // search — load default.metallib explicitly, resolved next to the executable (CLAUDE.md §5).
+  // search — load default.metallib explicitly, from right next to the executable.
   const std::filesystem::path metallib_path = executable_dir() / "default.metallib";
   NS::Error* error = nullptr;
   library_ = NS::TransferPtr(device_->newLibrary(

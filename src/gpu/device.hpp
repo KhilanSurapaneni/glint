@@ -4,11 +4,11 @@
 
 namespace glint::gpu {
 
-// Owns the GPU device handle, its command queue, and the compiled shader library. One Device
-// is enough for the whole process — construct it once and pass pointers around.
+// Owns the GPU connection: the device handle, a command queue to submit work through, and the
+// compiled shader library. Construct one Device near program start and share pointers from it.
 class Device {
  public:
-  Device();
+  Device();  // does the actual GPU handshake; throws on failure
 
   MTL::Device* device() const { return device_.get(); }
   MTL::CommandQueue* queue() const { return queue_.get(); }

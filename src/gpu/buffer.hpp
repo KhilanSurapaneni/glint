@@ -6,9 +6,8 @@
 
 namespace glint::gpu {
 
-// A typed GPU buffer of N elements of T. Backed by MTL::ResourceStorageModeShared, which on
-// Apple Silicon's unified memory means data() is directly CPU-readable/writable with no
-// explicit copy step to or from the GPU.
+// A list of N elements of type T, in memory the GPU can see. Uses unified-memory shared
+// storage, so data() is directly CPU-readable/writable with no explicit upload/download step.
 template <typename T>
 class Buffer {
  public:
@@ -17,7 +16,7 @@ class Buffer {
             device->newBuffer(count * sizeof(T), MTL::ResourceStorageModeShared))),
         count_(count) {}
 
-  MTL::Buffer* handle() const { return buffer_.get(); }
+  MTL::Buffer* handle() const { return buffer_.get(); }  // raw handle, for GPU dispatch calls
   size_t count() const { return count_; }
 
   T* data() { return static_cast<T*>(buffer_->contents()); }

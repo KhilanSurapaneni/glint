@@ -250,7 +250,7 @@ Do this offline first, entirely on CPU/CoreML, and only optimize it if there's t
 - **Errors:** exceptions for setup and configuration failures (shader compile, file not found, device unsupported). `std::expected` or an error enum in the per-frame path. Never throw from inside a frame loop.
 - **Memory:** RAII everywhere. `NS::SharedPtr<MTL::Buffer>` for Metal objects. No raw `new`. No `shared_ptr` unless ownership is genuinely shared — it usually isn't.
 - **Hot paths:** no allocation inside the per-frame loop. Pre-size all GPU buffers with a growth policy; log every reallocation at warn level so growth thrash is visible.
-- **Comments:** explain *why*, not *what*. The one exception is math — every non-obvious formula gets a comment naming the paper and equation number.
+- **Comments:** this is a learning-focused solo project, so comment more than typical production style calls for. Add a short, plain-language comment on each meaningful chunk or non-obvious line — what it does, not just why — so the code is readable without outside context. Keep each comment lean: a line or two, not a paragraph; skip comments on lines that are already self-explanatory (e.g. `int width = 0;`). Math still gets a comment naming the paper and equation number.
 
 ---
 
