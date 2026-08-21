@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 project(glint CXX)
+enable_language(OBJCXX)  # needed for src/viewer/metal_layer_bridge.mm, our one Objective-C++ file
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_OBJCXX_STANDARD 20)
+set(CMAKE_OBJCXX_STANDARD_REQUIRED ON)
 
 # All executables land directly in build/, regardless of which subdirectory defined them, so
 # default.metallib (also written to build/) is always alongside the binary that loads it.
