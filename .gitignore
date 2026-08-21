@@ -71,5 +71,8 @@ Testing/
 # macOS
 .DS_Store
 
+# Dear ImGui's runtime layout file — regenerated automatically each run
+imgui.ini
+
 # project assets — models, datasets; fetched locally, never committed
 assets/

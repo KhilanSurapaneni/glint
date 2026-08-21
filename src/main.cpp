@@ -3,7 +3,11 @@
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+
 #include "gpu/device.hpp"
+#include "viewer/imgui_metal_bridge.hpp"
 #include "viewer/metal_layer_bridge.hpp"
 
 #include <cstdio>
@@ -53,6 +57,14 @@ int main() {
     return 1;
   }
 
+  // Set up ImGui once: one context, one input backend (GLFW), one render backend (our Metal
+  // bridge). Context/input-backend calls are plain C++; the Metal backend goes through the
+  // bridge (see imgui_metal_bridge.hpp for why).
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGui_ImplGlfw_InitForOther(window, true);  // "Other" = not OpenGL/Vulkan, we handle rendering
+  glint::viewer::imgui_metal_init(device.device());
+
   // --- Render loop: runs once per frame, until the window closes ---
 
   while (!glfwWindowShouldClose(window)) {
@@ -77,8 +89,19 @@ int main() {
     MTL::CommandBuffer* command_buffer = device.queue()->commandBuffer();
     MTL::RenderCommandEncoder* encoder = command_buffer->renderCommandEncoder(pass);
 
+    // Build this frame's ImGui UI (CPU-side bookkeeping — no GPU drawing happens yet).
+    glint::viewer::imgui_metal_new_frame(pass);
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::ShowDemoWindow();  // built-in showcase panel, just to prove this all works
+    ImGui::Render();
+
+    // Draw our triangle first, so ImGui's overlay ends up on top of it.
     encoder->setRenderPipelineState(pipeline_state.get());
     encoder->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(3));
+
+    // Now actually draw the UI ImGui just built, into the same encoder.
+    glint::viewer::imgui_metal_render(ImGui::GetDrawData(), command_buffer, encoder);
 
     encoder->endEncoding();
 
@@ -87,6 +110,10 @@ int main() {
   }
 
   // --- Shutdown: runs once ---
+
+  glint::viewer::imgui_metal_shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
 
   glfwDestroyWindow(window);
   glfwTerminate();

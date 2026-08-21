@@ -155,29 +155,54 @@ pipeline creation → dispatch → readback.
 
 ## Phase 5 — Window: GLFW + ImGui, Metal-backed, triangle renders
 
-- [ ] `cmake/Dependencies.cmake`: `FetchContent` for GLFW and Dear ImGui (pinned tags)
-- [ ] `src/viewer/` — window creation via GLFW, attach a `CAMetalLayer` to the native window
-      handle for Metal-backed presentation
-- [ ] Wire up ImGui's GLFW + Metal backends (`imgui_impl_glfw`, `imgui_impl_metal`)
-- [ ] Render loop: clear the drawable, draw one hardcoded triangle (proves the raw Metal
-      render pipeline works, not just ImGui), overlay the ImGui demo window
-- [ ] `src/main.cpp` ties device init → viewer → render loop together
-- [ ] 🧑 Manual verification: run `./build/glint` and visually confirm a window opens showing
-      a triangle and an ImGui panel
+- [x] `cmake/Dependencies.cmake`: `FetchContent` for GLFW (pinned `3.4`) and Dear ImGui
+      (pinned `v1.92.9`)
+- [x] `src/viewer/` — window creation via GLFW, `CAMetalLayer` bridge (`metal_layer_bridge.mm`,
+      Objective-C++ — AppKit isn't reachable from metal-cpp)
+- [x] Wire up ImGui's GLFW + Metal backends (`imgui_impl_glfw` called directly from `main.cpp`;
+      `imgui_impl_metal` needed its own bridge file, `imgui_metal_bridge.mm` — its header uses
+      raw Objective-C types plain C++ can't even parse)
+- [x] Render loop: clear the drawable, draw one hardcoded triangle (proves the raw Metal
+      render pipeline works, not just ImGui) — confirmed rendering correctly
+- [x] overlay the ImGui demo window on top of the triangle — confirmed visible and interactive
+- [x] `src/main.cpp` ties device init → viewer → render loop together
+- [x] 🧑 Manual verification: triangle confirmed on screen (red/green/blue corners, interpolated)
+- [x] 🧑 Manual verification: ImGui panel also visible over the triangle
 
-**This is the milestone's "GLFW window with ImGui" and "a triangle renders" exit criteria.**
+**Phase 5 complete — both exit criteria ("GLFW window with ImGui", "a triangle renders") met.**
+
+*Along the way: fixed a real design gap in `cmake/CompileMetalShaders.cmake` — originally each
+target would've tried to build its own `default.metallib`, which breaks the moment a second
+shader-using target exists. Refactored into `glint_compile_metal_shaders()` (called once,
+project-wide) + `glint_depends_on_metallib(TARGET)`, matching `CLAUDE.md`'s own "one shared
+default.metallib" model.*
 
 ---
 
 ## Phase 6 — Dataset loader reads Replica
 
-- [ ] Get one Replica scene into `assets/replica/` (gitignored). We'll figure out the current
-      correct download source together when we reach this step rather than guessing a URL now
-      — Replica is distributed via a fetch script from the original Replica/NICE-SLAM/SplaTAM
-      research repos, and the exact working link/method should be verified live, not assumed.
-  - [ ] `tools/fetch_models.py`-style script or documented manual step, per `CLAUDE.md` §4
-- [ ] `src/core/types.hpp` — minimal `Camera`, `Frame`, `Pose` structs needed to hold a loaded frame
-- [ ] `src/io/dataset.cpp` — Replica-format loader (RGB + depth + intrinsics + poses)
+- [x] Get one Replica scene into `assets/replica/` (gitignored). Downloaded and extracted —
+      8 scenes (`office0`-`4`, `room0`-`2`), verified against real files, not just docs:
+      `results/frame*.jpg` (1200×680 RGB) + `results/depth*.png` (1200×680, 16-bit) pairs,
+      2000 of each in `room0`, matching `traj.txt`'s 2000 lines (16 floats each, row-major 4×4
+      camera-to-world, confirmed by the trailing `0 0 0 1` row). Intrinsics confirmed from
+      NICE-SLAM's own config: `fx=fy=600.0, cx=599.5, cy=339.5, png_depth_scale=6553.5`.
+      **Non-obvious catch found in the reference loader code**: parsed poses need their Y and Z
+      columns negated (coordinate-convention fix) — would've silently produced a wrong/mirrored
+      trajectory if skipped.
+  - [x] `tools/fetch_replica.sh` — documents the exact fetch, with the verified structure/
+        intrinsics/gotcha written into the script's own header comment
+- [x] `src/core/types.hpp` — minimal `Camera`, `Frame`, `Pose` structs needed to hold a loaded
+      frame. Vendored Eigen (`3.4.1`), fetching only its source (not its own heavy
+      CMakeLists.txt / test suite) via a nonexistent `SOURCE_SUBDIR` — the CMake-endorsed
+      replacement for the now-deprecated `FetchContent_Populate` two-step form.
+      `tests/test_core_types.cpp` proves `core/` builds/runs with zero GPU dependency — no
+      `glint_depends_on_metallib` call for this test target, on purpose.
+- [x] `src/io/dataset.cpp` — Replica-format loader (RGB + depth + intrinsics + poses). Vendored
+      `stb_image` (pinned to a commit hash — this repo has no release tags). Changed
+      `core::Frame::depth` from raw `uint16_t` to `float` meters, converting with
+      `png_depth_scale` once at load time rather than leaking that dataset detail downstream.
+      Applies the verified Y/Z column-negation fix to every parsed pose.
 - [ ] Test: load the scene, assert frame count > 0 and first frame's intrinsics/pose are sane
       (non-zero, finite)
 
