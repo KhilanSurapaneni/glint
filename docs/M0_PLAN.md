@@ -128,26 +128,26 @@ just means fetching the headers at configure time.
 This is the first real Metal code and proves the whole GPU path: shader compilation →
 pipeline creation → dispatch → readback.
 
-- [ ] `src/shaders/shared_types.h` — minimal for now (can be nearly empty; real structs come
+- [x] `src/shaders/shared_types.h` — minimal for now (can be nearly empty; real structs come
       in M2). Per `CLAUDE.md` §8, this file is included by both C++ and MSL — keep it scalar,
       no nested structs yet.
-- [ ] `src/shaders/add.metal` — a `kernel void add_arrays(...)` that does `c[i] = a[i] + b[i]`
-- [ ] `cmake/CompileMetalShaders.cmake` — custom build step:
+- [x] `src/shaders/add.metal` — a `kernel void add_arrays(...)` that does `c[i] = a[i] + b[i]`
+- [x] `cmake/CompileMetalShaders.cmake` — custom build step:
   ```
   xcrun -sdk macosx metal -c src/shaders/*.metal -o build/*.air -I src/shaders
   xcrun -sdk macosx metallib build/*.air -o build/default.metallib
   ```
   wired in as a CMake custom command/target so it reruns when `.metal` files change
-- [ ] `src/gpu/device.hpp/.cpp` — wraps `MTL::CreateSystemDefaultDevice()`, a command queue,
+- [x] `src/gpu/device.hpp/.cpp` — wraps `MTL::CreateSystemDefaultDevice()`, a command queue,
       and **explicit** library loading via
       `device->newLibrary(NS::String::string(path, NS::UTF8StringEncoding), &error)`
       — not `newDefaultLibrary()`, which fails for non-bundled executables (`CLAUDE.md` §5 gotcha #2).
       Path is resolved relative to the built executable.
-- [ ] `src/gpu/buffer.hpp` — typed wrapper over `MTL::Buffer` (RAII, `NS::SharedPtr`, per §7)
-- [ ] `src/gpu/kernel.hpp` — pipeline-state cache + a dispatch helper
-- [ ] A test (`tests/test_gpu_add.cpp`, GoogleTest): allocate two buffers of known values,
+- [x] `src/gpu/buffer.hpp` — typed wrapper over `MTL::Buffer` (RAII, `NS::SharedPtr`, per §7)
+- [x] `src/gpu/kernel.hpp` — pipeline-state cache + a dispatch helper
+- [x] A test (`tests/test_gpu_add.cpp`, GoogleTest): allocate two buffers of known values,
       dispatch `add_arrays`, read back, assert every element equals the CPU-computed sum
-- [ ] `ctest --test-dir build --output-on-failure` — this test passes
+- [x] `ctest --test-dir build --output-on-failure` — this test passes
 
 **This is the milestone's "kernel adds two buffers correctly" exit criterion.**
 
