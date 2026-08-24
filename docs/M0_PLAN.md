@@ -203,8 +203,13 @@ default.metallib" model.*
       `core::Frame::depth` from raw `uint16_t` to `float` meters, converting with
       `png_depth_scale` once at load time rather than leaking that dataset detail downstream.
       Applies the verified Y/Z column-negation fix to every parsed pose.
-- [ ] Test: load the scene, assert frame count > 0 and first frame's intrinsics/pose are sane
-      (non-zero, finite)
+- [x] Test: load the scene, assert frame count > 0 and first frame's intrinsics/pose are sane
+      (non-zero, finite). `tests/test_dataset.cpp` — `GTEST_SKIP()`s gracefully if
+      `assets/replica/` isn't present (points at `tools/fetch_replica.sh`), otherwise loads the
+      real `room0` scene and checks: frame count == 2000, intrinsics match the known constants,
+      first pose is finite and not identity, RGB/depth buffer sizes are exactly right.
+
+**Phase 6 complete — dataset loader reads Replica, proven on real data.**
 
 ---
 
