@@ -79,4 +79,4 @@ assets/
 
 # internal working docs — not part of the public-facing repo
 CLAUDE.md
-docs/M0_PLAN.md
+docs/*_PLAN.md

@@ -19,3 +19,14 @@ target_link_libraries(test_dataset PRIVATE glint_io GTest::gtest_main)
 # what directory the test actually runs from.
 target_compile_definitions(test_dataset PRIVATE GLINT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 gtest_discover_tests(test_dataset)
+
+# Proves shared_types.h's memory layout actually matches between C++ and MSL — see CLAUDE.md §8.
+add_executable(test_layout test_layout.cpp)
+target_link_libraries(test_layout PRIVATE glint_gpu GTest::gtest_main)
+glint_depends_on_metallib(test_layout)
+gtest_discover_tests(test_layout)
+
+add_executable(test_unproject test_unproject.cpp)
+target_link_libraries(test_unproject PRIVATE glint_gpu GTest::gtest_main)
+glint_depends_on_metallib(test_unproject)
+gtest_discover_tests(test_unproject)
