@@ -7,6 +7,7 @@
 
 #include <Eigen/Core>
 
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -90,7 +91,7 @@ glint::core::Frame load_frame(const std::filesystem::path& results_dir, int inde
 
 }  // namespace
 
-ReplicaScene load_replica_scene(const std::filesystem::path& scene_dir) {
+ReplicaScene load_replica_scene(const std::filesystem::path& scene_dir, size_t max_frames) {
   ReplicaScene scene;
   scene.camera.width = kWidth;
   scene.camera.height = kHeight;
@@ -100,10 +101,11 @@ ReplicaScene load_replica_scene(const std::filesystem::path& scene_dir) {
   scene.camera.cy = kCy;
 
   const std::vector<Eigen::Matrix4f> poses = load_poses(scene_dir / "traj.txt");
+  const size_t count = std::min(poses.size(), max_frames);
 
-  scene.frames.reserve(poses.size());
+  scene.frames.reserve(count);
   const std::filesystem::path results_dir = scene_dir / "results";
-  for (size_t i = 0; i < poses.size(); ++i) {
+  for (size_t i = 0; i < count; ++i) {
     scene.frames.push_back(load_frame(results_dir, static_cast<int>(i), poses[i]));
   }
 

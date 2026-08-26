@@ -2,7 +2,9 @@
 
 #include "core/types.hpp"
 
+#include <cstddef>
 #include <filesystem>
+#include <limits>
 #include <vector>
 
 namespace glint::io {
@@ -16,7 +18,9 @@ struct ReplicaScene {
 
 // Loads a Replica scene from `scene_dir` (e.g. assets/replica/Replica/room0), expecting the
 // results/frame*.jpg + results/depth*.png + traj.txt layout documented in
-// tools/fetch_replica.sh.
-ReplicaScene load_replica_scene(const std::filesystem::path& scene_dir);
+// tools/fetch_replica.sh. `max_frames` caps how many frames get loaded (default: all of
+// them) — useful for fast local iteration instead of waiting on a full ~30-100s scene load.
+ReplicaScene load_replica_scene(const std::filesystem::path& scene_dir,
+                                 size_t max_frames = std::numeric_limits<size_t>::max());
 
 }  // namespace glint::io

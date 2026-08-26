@@ -20,6 +20,7 @@ glint_compile_metal_shaders(
   ${CMAKE_SOURCE_DIR}/src/shaders/triangle.metal
   ${CMAKE_SOURCE_DIR}/src/shaders/test_layout.metal
   ${CMAKE_SOURCE_DIR}/src/shaders/unproject.metal
+  ${CMAKE_SOURCE_DIR}/src/shaders/point_cloud.metal
 )
 
 enable_testing()  # turns on `ctest`
