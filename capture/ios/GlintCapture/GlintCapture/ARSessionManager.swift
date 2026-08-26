@@ -27,12 +27,20 @@ class ARSessionManager: NSObject, ARSessionDelegate {
     }
 
     // Called automatically by ARKit once per tracked frame — same "callback, not something we
-    // call ourselves" pattern as the scroll callback on the C++ side. Just proving frames
-    // actually arrive for now; pulling out RGB/depth/pose/intrinsics is the next step.
+    // call ourselves" pattern as the scroll callback on the C++ side.
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
         frameCount += 1
+
+        guard let captured = FrameExtraction.extract(from: frame) else {
+            if frameCount % 30 == 0 {
+                print("frame #\(frameCount): no depth yet, skipping")
+            }
+            return
+        }
+
         if frameCount % 30 == 0 {  // print occasionally, not every single frame
-            print("frame #\(frameCount), depth available: \(frame.sceneDepth != nil)")
+            print("frame #\(frameCount): fx=\(captured.fx) fy=\(captured.fy) "
+                + "cx=\(captured.cx) cy=\(captured.cy)")
         }
     }
 }
