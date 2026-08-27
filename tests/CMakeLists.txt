@@ -30,3 +30,9 @@ add_executable(test_unproject test_unproject.cpp)
 target_link_libraries(test_unproject PRIVATE glint_gpu GTest::gtest_main)
 glint_depends_on_metallib(test_unproject)
 gtest_discover_tests(test_unproject)
+
+# No GPU dependency — this only exercises capture_format.cpp's encode/decode and
+# capture_bundle.cpp's file reader, same reasoning as test_dataset.
+add_executable(test_capture_bundle test_capture_bundle.cpp)
+target_link_libraries(test_capture_bundle PRIVATE glint_io GTest::gtest_main)
+gtest_discover_tests(test_capture_bundle)

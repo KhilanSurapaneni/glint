@@ -105,6 +105,10 @@ ReplicaScene load_replica_scene(const std::filesystem::path& scene_dir, size_t m
 
   scene.frames.reserve(count);
   const std::filesystem::path results_dir = scene_dir / "results";
+  // A sequential prefix, not spread across the trajectory: consecutive Replica frames are
+  // close together in pose, so `count` of them densely, overlappingly cover whichever one
+  // area of the room the walkthrough starts in — better for filling occlusion holes there
+  // than the same `count` spread thin across the whole scene.
   for (size_t i = 0; i < count; ++i) {
     scene.frames.push_back(load_frame(results_dir, static_cast<int>(i), poses[i]));
   }
