@@ -49,6 +49,11 @@ int main(int argc, char** argv) {
   Source source = Source::kReplicaDataset;
   uint16_t live_port = 5555;
   std::string capture_path;
+  // Sequential-prefix frame count for the default Replica source — see dataset.cpp's
+  // load_replica_scene doc comment. 200 is the everyday dev/demo default; overridable for
+  // quick one-off looks (e.g. --max-frames 1 to see a single frame's raw point cloud, before
+  // multiple frames' points are stacked together).
+  size_t max_frames = 200;
 
   for (int i = 1; i < argc; ++i) {
     const std::string arg = argv[i];
@@ -59,6 +64,8 @@ int main(int argc, char** argv) {
     } else if (arg == "--capture" && i + 1 < argc) {
       source = Source::kCaptureFile;
       capture_path = argv[++i];
+    } else if (arg == "--max-frames" && i + 1 < argc) {
+      max_frames = static_cast<size_t>(std::stoul(argv[++i]));
     }
   }
 
@@ -108,14 +115,14 @@ int main(int argc, char** argv) {
     std::fprintf(stderr, "loaded %zu frames from %s\n", capture_bundle.frames.size(),
                  capture_path.c_str());
   } else {
-    // A sequential prefix of the trajectory, not spread across the room: 200 consecutive
-    // frames give dense, overlapping coverage of whichever one area the walkthrough starts
-    // in, filling in occlusion holes there for the best-looking single-area cloud. Each frame
+    // A sequential prefix of the trajectory, not spread across the room: consecutive frames
+    // give dense, overlapping coverage of whichever one area the walkthrough starts in,
+    // filling in occlusion holes there for the best-looking single-area cloud. Each frame
     // keeps ~24 MiB resident for the life of the program (positions+colors GPU buffers, plus
-    // the CPU-side rgb+depth still owned by `dataset_scene`) — 200 frames is ~4.7 GiB, well
-    // inside a 36 GB machine.
-    dataset_scene = glint::io::load_replica_scene("assets/replica/Replica/room0",
-                                                   /*max_frames=*/200);
+    // the CPU-side rgb+depth still owned by `dataset_scene`) — the 200-frame default is
+    // ~4.7 GiB, well inside a 36 GB machine.
+    dataset_scene =
+        glint::io::load_replica_scene("assets/replica/Replica/room0", max_frames);
     camera = dataset_scene.camera;
     upfront_frames = &dataset_scene.frames;
   }

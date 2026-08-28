@@ -36,3 +36,45 @@ gtest_discover_tests(test_unproject)
 add_executable(test_capture_bundle test_capture_bundle.cpp)
 target_link_libraries(test_capture_bundle PRIVATE glint_io GTest::gtest_main)
 gtest_discover_tests(test_capture_bundle)
+
+# SplatSoA owns real GPU buffers, and initialize_from_frames dispatches the real
+# unproject_pixel kernel — needs the metallib and, for the real-data test, Replica itself
+# (skips gracefully if absent, same as test_dataset.cpp).
+add_executable(test_splat_model test_splat_model.cpp)
+target_link_libraries(test_splat_model PRIVATE glint_splat glint_gpu glint_io GTest::gtest_main)
+target_compile_definitions(test_splat_model PRIVATE GLINT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+glint_depends_on_metallib(test_splat_model)
+gtest_discover_tests(test_splat_model)
+
+# Also GPU-free -- covariance.hpp is pure math, verified on the CPU before Phase 2.4 ports the
+# same formulas into a real Metal kernel.
+add_executable(test_covariance test_covariance.cpp)
+target_link_libraries(test_covariance PRIVATE glint_core GTest::gtest_main)
+gtest_discover_tests(test_covariance)
+
+add_executable(test_spherical_harmonics test_spherical_harmonics.cpp)
+target_link_libraries(test_spherical_harmonics PRIVATE glint_core GTest::gtest_main)
+gtest_discover_tests(test_spherical_harmonics)
+
+# The GPU-vs-CPU consistency check for preprocess.metal -- needs both the CPU reference math
+# (glint_core) and a real dispatch of the kernel itself (glint_gpu + the metallib).
+add_executable(test_preprocess test_preprocess.cpp)
+target_link_libraries(test_preprocess PRIVATE glint_core glint_gpu GTest::gtest_main)
+glint_depends_on_metallib(test_preprocess)
+gtest_discover_tests(test_preprocess)
+
+# Entirely CPU-side (Stage A, Open Decision #3) -- no GPU dependency at all.
+add_executable(test_sort test_sort.cpp)
+target_link_libraries(test_sort PRIVATE glint_splat GTest::gtest_main)
+gtest_discover_tests(test_sort)
+
+# The end-to-end correctness check for the whole forward pass (preprocess -> sort -> raster).
+add_executable(test_rasterizer test_rasterizer.cpp)
+target_link_libraries(test_rasterizer PRIVATE glint_splat glint_core glint_gpu GTest::gtest_main)
+glint_depends_on_metallib(test_rasterizer)
+gtest_discover_tests(test_rasterizer)
+
+# Pure CPU math -- no GPU dependency.
+add_executable(test_loss test_loss.cpp)
+target_link_libraries(test_loss PRIVATE glint_splat GTest::gtest_main)
+gtest_discover_tests(test_loss)

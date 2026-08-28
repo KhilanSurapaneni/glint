@@ -63,4 +63,33 @@ inline void dispatch_and_wait(MTL::CommandQueue* queue, const Kernel& kernel,
   command_buffer->waitUntilCompleted();  // block: caller needs the result before returning
 }
 
+// Dispatches `kernel` over a 2D grid of `threadgroups_x * threadgroups_y` threadgroups, each
+// exactly `threadgroup_width * threadgroup_height` threads — for kernels (like the tile-based
+// rasterizer) that need explicit control over threadgroup shape, unlike dispatch_and_wait's
+// "one thread per element, let the pipeline pick a threadgroup size" model. A thread's
+// threadgroup_position_in_grid tells it which tile it's responsible for.
+inline void dispatch_tiled_and_wait(MTL::CommandQueue* queue, const Kernel& kernel,
+                                     const std::vector<MTL::Buffer*>& buffers,
+                                     uint32_t threadgroups_x, uint32_t threadgroups_y,
+                                     uint32_t threadgroup_width, uint32_t threadgroup_height) {
+  NS::SharedPtr<MTL::CommandBuffer> command_buffer = NS::TransferPtr(queue->commandBuffer());
+  NS::SharedPtr<MTL::ComputeCommandEncoder> encoder =
+      NS::TransferPtr(command_buffer->computeCommandEncoder());
+
+  encoder->setComputePipelineState(kernel.pipeline());
+  for (size_t i = 0; i < buffers.size(); ++i) {
+    encoder->setBuffer(buffers[i], 0, i);
+  }
+
+  const MTL::Size grid_size = MTL::Size::Make(threadgroups_x * threadgroup_width,
+                                               threadgroups_y * threadgroup_height, 1);
+  const MTL::Size threadgroup_size = MTL::Size::Make(threadgroup_width, threadgroup_height, 1);
+
+  encoder->dispatchThreads(grid_size, threadgroup_size);
+  encoder->endEncoding();
+
+  command_buffer->commit();
+  command_buffer->waitUntilCompleted();
+}
+
 }  // namespace glint::gpu
